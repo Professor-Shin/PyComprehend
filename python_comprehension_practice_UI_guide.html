@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Code Comprehension Practice</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&family=Sarabun:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Sarabun', 'Inter', sans-serif; background-color: #f3f4f6; }
+        .code-font { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const MOCK_QUESTIONS = [
+            {
+                id: 1,
+                type: 'tracing',
+                title: 'Spy on Variable (if-else)',
+                description: 'จงหาค่าของตัวแปร a, b และ c ณ บรรทัดที่มีเครื่องหมายดอกจัน (*)',
+                code: `1: a = 8
+2: b = "Low"
+3: c = False
+4: if a < 10:
+*5:     a = a * 2
+6: if a > 15:
+7:     b = "High"
+*8:     c = True
+9: else:
+10:    b = "Mid"
+11: if c:
+*12:    a = a - 1`,
+                targets: [
+                    { line: 5, vars: ['a', 'b', 'c'] },
+                    { line: 8, vars: ['a', 'b', 'c'] },
+                    { line: 12, vars: ['a', 'b', 'c'] }
+                ],
+                // Answers can be flexible. In a real app, you might parse this safely.
+                answers: {
+                    '5-a': '16', '5-b': '"Low"', '5-c': 'False',
+                    '8-a': '16', '8-b': '"High"', '8-c': 'True',
+                    '12-a': '15', '12-b': '"High"', '12-c': 'True'
+                }
+            },
+            {
+                id: 2,
+                type: 'completion',
+                title: 'Code Completion',
+                description: 'เขียนโปรแกรมเพื่อจำแนกผลการเรียนจากตัวแปร score โดยเติมโค้ดในช่องว่าง [1] และ [2]\n- ถ้าตั้งแต่ 80 ขึ้นไป ให้ result เป็น "Excellent"\n- ถ้าอยู่ระหว่าง 50 ถึง 79 ให้ result เป็น "Pass"\n- ถ้าน้อยกว่า 50 ให้ result เป็น "Fail"',
+                code: `if score ___1___ 50:
+    if score ___2___ 80:
+        result = "Excellent"
+    else:
+        result = "Pass"
+else:
+    result = "Fail"`,
+                blanks: [
+                    { id: '1', label: 'ช่องว่าง [1]' },
+                    { id: '2', label: 'ช่องว่าง [2]' }
+                ],
+                answers: {
+                    '1': '>=',
+                    '2': '>='
+                }
+            },
+            {
+                id: 3,
+                type: 'mcq',
+                title: 'Output Prediction (List Comprehension)',
+                description: 'ตัวเลือกใดเป็นผลลัพธ์ที่พิมพ์จากโปรแกรมต่อไปนี้',
+                code: `x = [i*2 for i in '123']
+print(x)`,
+                options: [
+                    { id: 'A', text: "['246']" },
+                    { id: 'B', text: "['2', '4', '6']" },
+                    { id: 'C', text: "['11', '22', '33']" },
+                    { id: 'D', text: "['123123']" }
+                ],
+                answers: { 'mcq': 'C' },
+                explanation: "สตริง '123' ถูกแยกเป็น '1', '2', '3' เมื่อนำสตริงไปคูณ 2 ('1'*2) จะได้การต่อสตริงเป็น '11', '22', '33'"
+            }
+        ];
+
+        const App = () => {
+            const [activeQuestionId, setActiveQuestionId] = React.useState(MOCK_QUESTIONS[0].id);
+            const [userInputs, setUserInputs] = React.useState({});
+            const [isSubmitted, setIsSubmitted] = React.useState(false);
+            const [score, setScore] = React.useState({ correct: 0, total: 0 });
+
+            const currentQuestion = MOCK_QUESTIONS.find(q => q.id === activeQuestionId);
+
+            // Handle input changes
+            const handleInputChange = (key, value) => {
+                setUserInputs(prev => ({ ...prev, [key]: value }));
+                setIsSubmitted(false); // Reset submission state when typing
+            };
+
+            // Check Answers
+            const handleSubmit = () => {
+                let correctCount = 0;
+                let totalCount = Object.keys(currentQuestion.answers).length;
+
+                Object.entries(currentQuestion.answers).forEach(([key, correctAnswer]) => {
+                    // Simple string comparison (trim spaces and ignore single/double quote differences for simplicity)
+                    const userAns = (userInputs[key] || '').toString().trim().replace(/'/g, '"');
+                    const expectedAns = correctAnswer.toString().trim().replace(/'/g, '"');
+                    
+                    if (userAns.toLowerCase() === expectedAns.toLowerCase()) {
+                        correctCount++;
+                    }
+                });
+
+                setScore({ correct: correctCount, total: totalCount });
+                setIsSubmitted(true);
+            };
+
+            const resetQuestion = (id) => {
+                setActiveQuestionId(id);
+                setUserInputs({});
+                setIsSubmitted(false);
+            };
+
+            // Helpers for rendering code block
+            const renderCodeBlock = (code) => {
+                return (
+                    <div className="bg-[#1e1e1e] text-[#d4d4d4] p-4 rounded-xl overflow-x-auto shadow-inner code-font text-sm md:text-base leading-relaxed">
+                        <pre><code>{code}</code></pre>
+                    </div>
+                );
+            };
+
+            const renderTracingQuestion = (q) => {
+                return (
+                    <div className="space-y-6">
+                        {renderCodeBlock(q.code)}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+                            <h3 className="font-semibold text-gray-700 mb-4">ระบุค่าของตัวแปร (ถ้าเป็นข้อความให้ใส่ "" ด้วย)</h3>
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-50 border-b-2 border-gray-200">
+                                        <th className="p-3 text-gray-600 font-semibold w-24">Line #</th>
+                                        {q.targets[0].vars.map(v => (
+                                            <th key={v} className="p-3 text-gray-600 font-semibold code-font text-center">{v}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {q.targets.map((target, idx) => (
+                                        <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                            <td className="p-3 font-semibold text-gray-700">Line {target.line}</td>
+                                            {target.vars.map(v => {
+                                                const key = `${target.line}-${v}`;
+                                                const expected = q.answers[key];
+                                                const userVal = userInputs[key] || '';
+                                                const isCorrect = userVal.replace(/'/g, '"').toLowerCase() === expected.replace(/'/g, '"').toLowerCase();
+                                                
+                                                let inputClass = "w-full p-2 border rounded-lg text-center code-font focus:ring-2 focus:ring-blue-500 outline-none transition-all";
+                                                if (isSubmitted) {
+                                                    inputClass += isCorrect ? " bg-green-50 border-green-400 text-green-700" : " bg-red-50 border-red-400 text-red-700";
+                                                } else {
+                                                    inputClass += " border-gray-300";
+                                                }
+
+                                                return (
+                                                    <td key={key} className="p-2">
+                                                        <input 
+                                                            type="text" 
+                                                            value={userVal}
+                                                            onChange={(e) => handleInputChange(key, e.target.value)}
+                                                            className={inputClass}
+                                                            placeholder="-"
+                                                            disabled={isSubmitted && isCorrect}
+                                                        />
+                                                        {isSubmitted && !isCorrect && (
+                                                            <div className="text-xs text-green-600 text-center mt-1 font-semibold">
+                                                                เฉลย: {expected}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                )
+                                            })}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderCompletionQuestion = (q) => {
+                return (
+                    <div className="space-y-6">
+                        {renderCodeBlock(q.code)}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 className="font-semibold text-gray-700 mb-4">เติมโค้ดในช่องว่างให้สมบูรณ์</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {q.blanks.map(blank => {
+                                    const key = blank.id;
+                                    const expected = q.answers[key];
+                                    const userVal = userInputs[key] || '';
+                                    const isCorrect = userVal.trim() === expected.trim();
+                                    
+                                    let inputClass = "w-full p-3 border rounded-lg code-font focus:ring-2 focus:ring-blue-500 outline-none transition-all";
+                                    if (isSubmitted) {
+                                        inputClass += isCorrect ? " bg-green-50 border-green-400 text-green-700" : " bg-red-50 border-red-400 text-red-700";
+                                    } else {
+                                        inputClass += " border-gray-300";
+                                    }
+
+                                    return (
+                                        <div key={key} className="flex items-center space-x-3">
+                                            <label className="font-medium text-gray-600 min-w-[80px]">{blank.label}:</label>
+                                            <div className="flex-1">
+                                                <input 
+                                                    type="text" 
+                                                    value={userVal}
+                                                    onChange={(e) => handleInputChange(key, e.target.value)}
+                                                    className={inputClass}
+                                                    placeholder="เช่น >=, and, or"
+                                                    disabled={isSubmitted && isCorrect}
+                                                />
+                                                {isSubmitted && !isCorrect && (
+                                                    <div className="text-xs text-green-600 mt-1 font-semibold">
+                                                        เฉลย: {expected}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderMCQQuestion = (q) => {
+                return (
+                    <div className="space-y-6">
+                        {renderCodeBlock(q.code)}
+                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                            <h3 className="font-semibold text-gray-700 mb-4">เลือกคำตอบที่ถูกต้อง</h3>
+                            <div className="space-y-3">
+                                {q.options.map(opt => {
+                                    const isSelected = userInputs['mcq'] === opt.id;
+                                    const isExpected = q.answers['mcq'] === opt.id;
+                                    
+                                    let labelClass = "flex items-center p-4 border rounded-xl cursor-pointer transition-all code-font ";
+                                    
+                                    if (isSubmitted) {
+                                        if (isExpected) {
+                                            labelClass += "bg-green-50 border-green-400 text-green-800 ring-1 ring-green-400";
+                                        } else if (isSelected && !isExpected) {
+                                            labelClass += "bg-red-50 border-red-400 text-red-800";
+                                        } else {
+                                            labelClass += "border-gray-200 text-gray-500 opacity-50";
+                                        }
+                                    } else {
+                                        labelClass += isSelected ? "bg-blue-50 border-blue-400 text-blue-700 ring-1 ring-blue-400" : "border-gray-200 hover:bg-gray-50";
+                                    }
+
+                                    return (
+                                        <label key={opt.id} className={labelClass}>
+                                            <input 
+                                                type="radio" 
+                                                name="mcq-option" 
+                                                value={opt.id}
+                                                checked={isSelected}
+                                                onChange={() => handleInputChange('mcq', opt.id)}
+                                                className="hidden"
+                                                disabled={isSubmitted}
+                                            />
+                                            <span className="font-bold mr-4 text-lg w-6 h-6 flex items-center justify-center rounded-full bg-white border border-current">{opt.id}</span>
+                                            <span>{opt.text}</span>
+                                            
+                                            {isSubmitted && isExpected && <i className="fa-solid fa-check ml-auto text-green-600 text-xl"></i>}
+                                            {isSubmitted && isSelected && !isExpected && <i className="fa-solid fa-xmark ml-auto text-red-600 text-xl"></i>}
+                                        </label>
+                                    )
+                                })}
+                            </div>
+                            
+                            {isSubmitted && (
+                                <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-lg text-blue-800 text-sm">
+                                    <strong className="block mb-1"><i className="fa-solid fa-lightbulb mr-2 text-yellow-500"></i>คำอธิบาย:</strong>
+                                    {q.explanation}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col md:flex-row">
+                    {/* Sidebar / Navigation */}
+                    <div className="w-full md:w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm z-10 relative">
+                        <div className="p-6 border-b border-gray-200 bg-blue-600 text-white flex justify-between items-center">
+                            <div>
+                                <h1 className="text-xl font-bold tracking-wide">PyGrader<span className="text-blue-200">Lite</span></h1>
+                                <p className="text-xs text-blue-100 mt-1 opacity-80">Code Comprehension Practice</p>
+                            </div>
+                            <i className="fa-brands fa-python text-3xl opacity-80"></i>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                            <h2 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 ml-2">รายการแบบฝึกหัด</h2>
+                            {MOCK_QUESTIONS.map((q, idx) => (
+                                <button 
+                                    key={q.id}
+                                    onClick={() => resetQuestion(q.id)}
+                                    className={`w-full text-left p-4 rounded-xl transition-all duration-200 group flex items-start space-x-3 ${activeQuestionId === q.id ? 'bg-blue-50 border border-blue-200 shadow-sm' : 'hover:bg-gray-50 border border-transparent'}`}
+                                >
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${activeQuestionId === q.id ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500 group-hover:bg-gray-300'}`}>
+                                        {idx + 1}
+                                    </div>
+                                    <div>
+                                        <div className={`font-semibold ${activeQuestionId === q.id ? 'text-blue-800' : 'text-gray-700'}`}>
+                                            {q.title}
+                                        </div>
+                                        <div className="text-xs text-gray-500 mt-1 flex items-center">
+                                            <span className="inline-block w-2 h-2 rounded-full mr-1.5" style={{backgroundColor: q.type === 'tracing' ? '#10B981' : q.type === 'completion' ? '#F59E0B' : '#6366F1'}}></span>
+                                            {q.type.toUpperCase()}
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Main Content Area */}
+                    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-gray-50">
+                        {/* Header */}
+                        <header className="bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-800">{currentQuestion.title}</h2>
+                                <p className="text-gray-500 mt-2 text-sm whitespace-pre-line">{currentQuestion.description}</p>
+                            </div>
+                            {isSubmitted && (
+                                <div className={`px-4 py-2 rounded-full font-bold text-sm ${score.correct === score.total ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                    ได้คะแนน: {score.correct} / {score.total}
+                                </div>
+                            )}
+                        </header>
+
+                        {/* Workspace Area */}
+                        <main className="flex-1 overflow-y-auto p-6 md:p-10">
+                            <div className="max-w-4xl mx-auto">
+                                {currentQuestion.type === 'tracing' && renderTracingQuestion(currentQuestion)}
+                                {currentQuestion.type === 'completion' && renderCompletionQuestion(currentQuestion)}
+                                {currentQuestion.type === 'mcq' && renderMCQQuestion(currentQuestion)}
+
+                                {/* Action Buttons */}
+                                <div className="mt-8 flex justify-end space-x-4 border-t border-gray-200 pt-6">
+                                    <button 
+                                        onClick={() => resetQuestion(currentQuestion.id)}
+                                        className="px-6 py-2.5 rounded-lg font-medium text-gray-600 hover:bg-gray-200 transition-colors"
+                                    >
+                                        เริ่มทำใหม่
+                                    </button>
+                                    <button 
+                                        onClick={handleSubmit}
+                                        disabled={isSubmitted || Object.keys(userInputs).length === 0}
+                                        className={`px-8 py-2.5 rounded-lg font-bold text-white shadow-sm transition-all ${isSubmitted || Object.keys(userInputs).length === 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 hover:shadow-md active:transform active:scale-95'}`}
+                                    >
+                                        ตรวจคำตอบ <i className="fa-solid fa-paper-plane ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
