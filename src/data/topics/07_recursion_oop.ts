@@ -41,19 +41,21 @@ export const recursionOopTopic: Topic = {
       scope: 'final',
       title: 'Recursive Base Case Completion',
       type: 'completion',
-      difficulty: 'easy',
-      description: 'Fill in blank [1] for the base case condition of recursive sum function `rec_sum(n)`.',
+      difficulty: 'medium',
+      description: 'Fill in blank [1] for the base case condition, AND blank [2] for the recursive call of `rec_sum(n)` that returns `1+2+...+n`.',
       codeSnippet: `def rec_sum(n):
     if ___1___:
         return 0
-    return n + rec_sum(n - 1)`,
+    return n + ___2___`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Base case condition)', placeholder: 'e.g. n <= 0' }
+        { id: '1', label: 'Blank [1] (Base case condition)', placeholder: 'Type the stopping condition', hint: 'When should recursion stop? Think about what value of n means "nothing left to add".' },
+        { id: '2', label: 'Blank [2] (Recursive step)', placeholder: 'Type the recursive call', hint: 'Call the same function with a smaller input — what is n reduced by?' }
       ],
       answers: {
-        '1': 'n <= 0'
+        '1': 'n <= 0',
+        '2': 'rec_sum(n - 1)'
       },
-      explanation: 'When `n <= 0`, the base case stops recursion and returns 0 to prevent infinite recursion / RecursionError.'
+      explanation: 'When `n <= 0`, the base case stops recursion and returns 0 to prevent infinite recursion / RecursionError.\nThe recursive step `n + rec_sum(n - 1)` adds the current `n` to the sum of all smaller numbers.'
     },
     {
       id: 'rec_03',
@@ -134,18 +136,20 @@ print(mystery(4))`,
       title: 'Recursive Power Function Completion',
       type: 'completion',
       difficulty: 'medium',
-      description: 'Complete the recursive step in blank [1] for `power(base, exp)`.',
+      description: 'Complete blanks [1] and [2] for `power(base, exp)`:\n- Blank [1]: the recursive function call name\n- Blank [2]: the correct base case return value when `exp == 0`',
       codeSnippet: `def power(base, exp):
     if exp == 0:
-        return 1
+        return ___2___
     return base * ___1___(base, exp - 1)`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Recursive function call name)', placeholder: 'e.g. power' }
+        { id: '1', label: 'Blank [1] (Recursive function call name)', placeholder: 'Type the function name to call recursively', hint: 'A recursive function calls itself — what is the name of this function?' },
+        { id: '2', label: 'Blank [2] (Base case return value)', placeholder: 'Type the return value when exp is 0', hint: 'Any number raised to power 0 equals what?' }
       ],
       answers: {
-        '1': 'power'
+        '1': 'power',
+        '2': '1'
       },
-      explanation: 'To recursively compute `base^exp`, we multiply `base * power(base, exp - 1)` until `exp == 0`.'
+      explanation: 'To recursively compute `base^exp`, we multiply `base * power(base, exp - 1)` until `exp == 0`.\nThe base case returns `1` because any number raised to the power of 0 is 1 (e.g., `5^0 = 1`).'
     }
   ]
 };

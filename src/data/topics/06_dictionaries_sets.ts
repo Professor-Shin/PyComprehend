@@ -69,7 +69,7 @@ print(d1)`,
 }
 result = ___1___`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Dict comprehension)', placeholder: 'e.g. {k: v[0] for k, v in info.items()}' }
+        { id: '1', label: 'Blank [1] (Dict comprehension)', placeholder: 'Type the full dict comprehension', hint: 'Use {k: ... for k, v in info.items()} — how do you get the course name from tuple v?' }
       ],
       answers: {
         '1': '{k:v[0] for k,v in info.items()}'
@@ -108,7 +108,7 @@ result = ___1___`,
       type: 'mcq',
       difficulty: 'easy',
       description: 'Which option is **NOT** a tuple in Python?',
-      codeSnippet: '# Evaluating tuple literal definitions:',
+      codeSnippet: '// Evaluating tuple literal definitions:',
       options: [
         { id: 'A', text: '(3, 4)', isCodeFont: true },
         { id: 'B', text: '3, 4', isCodeFont: true },
@@ -124,19 +124,23 @@ result = ___1___`,
       topicId: '06_dictionaries_sets',
       topicTitle: 'Dictionaries, Sets & Tuples',
       scope: 'final',
-      title: 'Deleting Dictionary Key Completion',
+      title: 'Safe Dictionary Access Completion',
       type: 'completion',
-      difficulty: 'easy',
-      description: 'Fill in blank [1] to delete key `2301170` from dictionary `regist`.',
-      codeSnippet: `regist = {2301170: 3, 2301172: 1, 2301117: 4}
-___1___ regist[2301170]`,
+      difficulty: 'medium',
+      description: 'Fill in blanks [1] and [2]:\n- Blank [1]: safely get key `"grade"` from `student` dict, returning `"N/A"` if missing\n- Blank [2]: write the condition to check if key `"score"` exists in `student`',
+      codeSnippet: `student = {'name': 'Shin', 'score': 88}
+grade = student.___1___('grade', 'N/A')
+if ___2___:
+    print("Score:", student['score'])`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Deletion keyword)', placeholder: 'e.g. del' }
+        { id: '1', label: 'Blank [1] (Safe dict access method)', placeholder: 'Type the method name', hint: 'Which dict method retrieves a value safely with a default if key is missing?' },
+        { id: '2', label: 'Blank [2] (Key existence check)', placeholder: 'Type the condition here', hint: 'How do you check whether a key exists inside a dictionary?' }
       ],
       answers: {
-        '1': 'del'
+        '1': 'get',
+        '2': '"score" in student'
       },
-      explanation: 'The `del` statement in Python deletes references, list elements, or dictionary key-value pairs (e.g. `del regist[2301170]`).'
+      explanation: '`dict.get(key, default)` returns the value for `key` if it exists, otherwise returns `default` (no KeyError). The `in` operator checks for key membership: `"score" in student` returns `True` if `"score"` is a key in the dictionary.'
     }
   ]
 };

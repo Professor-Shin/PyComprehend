@@ -23,7 +23,7 @@ for x in ___1___:
     output = output + text[x]
 print(output)`,
       blanks: [
-        { id: '1', label: 'Blank [1] (range expression)', placeholder: 'e.g. range(len(text)-1, -1, -2)', hint: 'Start from last index, go down to 0 step -2' }
+        { id: '1', label: 'Blank [1] (range expression)', placeholder: 'Type the range(...) expression', hint: 'Start from the last index, count down by 2 steps' }
       ],
       answers: {
         '1': 'range(len(text)-1,-1,-2)'
@@ -70,7 +70,7 @@ for i in range(len(text)):
         print(i)
         break`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Condition to match "a")', placeholder: 'e.g. text[i] == "a"' }
+        { id: '1', label: 'Blank [1] (Condition to match "a")', placeholder: 'Type the condition here', hint: 'How do you check if the character at index i equals "a"?' }
       ],
       answers: {
         '1': "text[i] == 'a'"
@@ -133,21 +133,22 @@ print(s)`,
       topicId: '03_loops',
       topicTitle: 'Loops & Iteration',
       scope: 'midterm',
-      title: 'Sum of Evens Range Completion',
+      title: 'Filtered Accumulator Completion',
       type: 'completion',
-      difficulty: 'easy',
-      description: 'Fill in blank [1] to sum all even numbers from 2 up to 10 inclusive.',
+      difficulty: 'medium',
+      description: 'Fill in blank [1] to sum all **multiples of 3** from 1 to 30 inclusive.',
       codeSnippet: `total = 0
-for n in ___1___:
-    total += n
+for n in range(1, 31):
+    if ___1___:
+        total += n
 print(total)`,
       blanks: [
-        { id: '1', label: 'Blank [1] (range expression)', placeholder: 'e.g. range(2, 11, 2)' }
+        { id: '1', label: 'Blank [1] (Divisibility condition)', placeholder: 'Type the condition here', hint: 'How do you check if n is divisible by 3 using the % operator?' }
       ],
       answers: {
-        '1': 'range(2,11,2)'
+        '1': 'n % 3 == 0'
       },
-      explanation: '`range(2, 11, 2)` generates values `2, 4, 6, 8, 10`. Note that the end parameter `11` is exclusive, stopping at 10.'
+      explanation: '`n % 3 == 0` checks if `n` is divisible by 3 (remainder is 0). The multiples of 3 from 1 to 30 are `3, 6, 9, ..., 30`. Their sum is `3+6+9+12+15+18+21+24+27+30 = 165`.'
     }
   ]
 };

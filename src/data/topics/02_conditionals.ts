@@ -25,9 +25,9 @@ export const conditionalsTopic: Topic = {
 7:     b = "High"
 *8:     c = True
 9: else:
-10:    b = "Mid"
+10:     b = "Mid"
 11: if c:
-*12:    a = a - 1`,
+*12:     a = a - 1`,
       variablesToTrack: ['a', 'b', 'c'],
       targets: [
         { line: 5, vars: ['a', 'b', 'c'] },
@@ -48,22 +48,24 @@ export const conditionalsTopic: Topic = {
       scope: 'midterm',
       title: 'Grade Classifier Completion',
       type: 'completion',
-      difficulty: 'easy',
-      description: 'Fill in blanks [1] and [2] to classify scores:\n- Score >= 80 -> "Excellent"\n- 50 <= Score < 80 -> "Pass"\n- Score < 50 -> "Fail"',
+      difficulty: 'medium',
+      description: 'Fill in blanks [1], [2], and [3] to classify scores:\n- Score >= 80 -> "Excellent"\n- 50 <= Score < 80 -> "Pass"\n- Score < 50 -> "Fail"',
       codeSnippet: `if score ___1___ 50:
     if score ___2___ 80:
         result = "Excellent"
     else:
-        result = "Pass"
+        result = ___3___
 else:
     result = "Fail"`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Condition for Passing)', placeholder: 'e.g. >=', hint: 'Check if score is at least 50' },
-        { id: '2', label: 'Blank [2] (Condition for Excellence)', placeholder: 'e.g. >=', hint: 'Check if score is at least 80' }
+        { id: '1', label: 'Blank [1] (Outer condition operator)', placeholder: 'Type the comparison operator', hint: 'Is the score at least 50, or more than 50?' },
+        { id: '2', label: 'Blank [2] (Inner condition operator)', placeholder: 'Type the comparison operator', hint: 'Is the score at least 80, or more than 80?' },
+        { id: '3', label: 'Blank [3] (Result string for 50-79 range)', placeholder: 'Type the string value (with quotes)', hint: 'What is the result when score is between 50 and 79?' }
       ],
       answers: {
         '1': '>=',
-        '2': '>='
+        '2': '>=',
+        '3': '"Pass"'
       },
       explanation: 'Outer condition checks if score is `>= 50`. If true, inner condition checks if score is `>= 80` for "Excellent", otherwise "Pass". If `< 50`, it hits the outer else for "Fail".'
     },
@@ -147,22 +149,22 @@ print(result)`,
       topicId: '02_conditionals',
       topicTitle: 'Conditionals & Boolean Logic',
       scope: 'midterm',
-      title: 'Leap Year Condition Completion',
+      title: 'Leap Year Full Condition Completion',
       type: 'completion',
       difficulty: 'medium',
-      description: 'Fill in blank [1] to check if a year is divisible by 4.',
+      description: 'Fill in blank [1] with the complete condition to determine a leap year.\nA leap year is: (divisible by 4 AND NOT divisible by 100) OR (divisible by 400).',
       codeSnippet: `year = 2024
-if year ___1___ 4 == 0:
+if ___1___:
     is_leap = True
 else:
     is_leap = False`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Divisibility operator)', placeholder: 'e.g. %' }
+        { id: '1', label: 'Blank [1] (Complete leap year condition)', placeholder: 'Type the boolean expression', hint: 'Combine % 4 == 0, % 100, % 400 with and/or/not' }
       ],
       answers: {
-        '1': '%'
+        '1': '(year % 4 == 0 and year % 100 != 0) or year % 400 == 0'
       },
-      explanation: 'The `%` operator returns remainder of division. `year % 4 == 0` checks if `year` is evenly divisible by 4.'
+      explanation: 'A year is a leap year if:\n1. Divisible by 4 AND NOT divisible by 100 (e.g., 2024), OR\n2. Divisible by 400 (e.g., 2000).\nYears like 1900 are divisible by 4 but also by 100 (and not 400), so they are NOT leap years.'
     }
   ]
 };

@@ -111,7 +111,7 @@ print(cars)`,
       codeSnippet: `names = ['Apiwat', 'Athirat', 'Benjapon', 'Chanapa', 'Danai']
 a_names = [i for i in names if ___1___]`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Condition for starting with "A")', placeholder: 'e.g. i[0] == "A"' }
+        { id: '1', label: 'Blank [1] (Condition for starting with "A")', placeholder: 'Type the condition here', hint: 'How do you access the first character of string i and compare it?' }
       ],
       answers: {
         '1': "i[0] == 'A'"

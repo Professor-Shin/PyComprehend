@@ -118,19 +118,23 @@ print(res)`,
       topicId: '04_functions',
       topicTitle: 'Functions & Scope',
       scope: 'final',
-      title: 'Default Parameter Completion',
+      title: 'Default Parameter & Guard Clause Completion',
       type: 'completion',
-      difficulty: 'easy',
-      description: 'Fill in blank [1] to set a default value of 1 for argument `step`.',
-      codeSnippet: `def increment(value, step ___1___ 1):
-    return value + step`,
+      difficulty: 'medium',
+      description: 'Fill in blanks [1] and [2]:\n- Blank [1]: set the default value of `step` to 1\n- Blank [2]: write the return guard to prevent division by zero',
+      codeSnippet: `def safe_divide(value, step ___1___ 1):
+    if step ___2___:
+        return None
+    return value / step`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Default parameter assignment)', placeholder: 'e.g. =' }
+        { id: '1', label: 'Blank [1] (Default parameter syntax)', placeholder: 'Type the assignment for the default', hint: 'Default parameters use an assignment-like syntax after the parameter name' },
+        { id: '2', label: 'Blank [2] (Guard condition for division by zero)', placeholder: 'Type the condition here', hint: 'What value of step would cause division by zero?' }
       ],
       answers: {
-        '1': '='
+        '1': '= 1',
+        '2': '== 0'
       },
-      explanation: 'In Python function signatures, default parameter values are defined using the `=` sign (e.g., `step = 1`).'
+      explanation: 'In Python function signatures, default parameter values use `=` (e.g., `step = 1`).\nThe guard clause `if step == 0: return None` prevents `ZeroDivisionError` when `step` is zero.'
     },
     {
       id: 'func_06',

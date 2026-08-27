@@ -37,7 +37,7 @@ export const variablesAndIoTopic: Topic = {
         '8-y': '"2020!"',
         '8-z': '45'
       },
-      explanation: 'At line 5: `x` was updated to `int("20") + 5 = 25`. `y` becomes `"20" * 2 = "2020"`. `z` is `10 * 2 = 20`.\nAt line 8: `z` is `20 + 25 = 45`, `x` is `25 % 7 = 4`, and `y` concatenates `"!"` becoming `"2020!"`.'
+      explanation: 'At line 5: `x` was updated to `int("20") + 5 = 25`. `y` becomes `"20" * 2 = "2020"`. `z` is `10 * 2 = 20`.\nAt line 8: `z` is `20 + 25 = 45`, `x` is `25 % 7 = 4`, and `y` concatenates `"!"` becoming `"2020!"`.`'
     },
     {
       id: 'var_02',
@@ -73,8 +73,8 @@ export const variablesAndIoTopic: Topic = {
 num = ___1___(raw_input)
 is_even = (num ___2___ 2 == 0)`,
       blanks: [
-        { id: '1', label: 'Blank [1] (Type cast function)', placeholder: 'e.g. int' },
-        { id: '2', label: 'Blank [2] (Modulo operator)', placeholder: 'e.g. %' }
+        { id: '1', label: 'Blank [1] (Type cast function)', placeholder: 'Type the function name here', hint: 'Which built-in function converts a string to integer?' },
+        { id: '2', label: 'Blank [2] (Modulo operator)', placeholder: 'Type the operator here', hint: 'What operator gives the remainder of division?' }
       ],
       answers: {
         '1': 'int',
@@ -144,7 +144,7 @@ print(s[-1], len(s))`,
 score = 95.0
 greeting = f"Hello ___1___, score: {score}"`,
       blanks: [
-        { id: '1', label: 'Blank [1] (f-string variable interpolation)', placeholder: 'e.g. {name}' }
+        { id: '1', label: 'Blank [1] (f-string variable interpolation)', placeholder: 'Type the f-string expression here', hint: 'How do you embed a variable inside an f-string?' }
       ],
       answers: {
         '1': '{name}'
