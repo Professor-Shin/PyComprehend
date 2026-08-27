@@ -25,9 +25,9 @@ export const conditionalsTopic: Topic = {
 7:     b = "High"
 *8:     c = True
 9: else:
-10:    b = "Mid"
+10:     b = "Mid"
 11: if c:
-*12:    a = a - 1`,
+*12:     a = a - 1`,
       variablesToTrack: ['a', 'b', 'c'],
       targets: [
         { line: 5, vars: ['a', 'b', 'c'] },

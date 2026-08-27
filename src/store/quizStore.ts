@@ -10,6 +10,7 @@ interface QuizState {
   activeQuestionId: string;
   userInputs: Record<string, string>;
   submittedQuestions: Record<string, boolean>;
+  revealedAnswers: Record<string, boolean>;
   scores: Record<string, { correct: number; total: number; isPassed: boolean }>;
   showScoreModal: boolean;
 
@@ -19,6 +20,8 @@ interface QuizState {
   selectQuestion: (questionId: string) => void;
   setUserInput: (key: string, value: string) => void;
   submitQuestion: () => void;
+  retryQuestion: (questionId?: string) => void;
+  toggleRevealAnswer: (questionId?: string) => void;
   resetQuestion: (questionId?: string) => void;
   nextQuestion: () => void;
   prevQuestion: () => void;
@@ -38,6 +41,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   activeQuestionId: ALL_TOPICS[0].questions[0].id,
   userInputs: {},
   submittedQuestions: {},
+  revealedAnswers: {},
   scores: {},
   showScoreModal: false,
 
@@ -91,6 +95,16 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     let totalCount = 0;
 
     if (currentQ.type === 'tracing') {
+      // Require all target variable fields to be filled
+      const allFilled = currentQ.targets.every((target) =>
+        target.vars.every((v) => {
+          const key = `${target.line}-${v}`;
+          const val = state.userInputs[key];
+          return typeof val === 'string' && val.trim().length > 0;
+        })
+      );
+      if (!allFilled) return;
+
       totalCount = Object.keys(currentQ.answers).length;
       Object.entries(currentQ.answers).forEach(([key, expected]) => {
         const userVal = state.userInputs[key];
@@ -99,6 +113,13 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         }
       });
     } else if (currentQ.type === 'completion') {
+      // Require all blank fields to be filled
+      const allFilled = currentQ.blanks.every((b) => {
+        const val = state.userInputs[b.id];
+        return typeof val === 'string' && val.trim().length > 0;
+      });
+      if (!allFilled) return;
+
       totalCount = Object.keys(currentQ.answers).length;
       Object.entries(currentQ.answers).forEach(([key, expected]) => {
         const userVal = state.userInputs[key];
@@ -107,6 +128,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         }
       });
     } else if (currentQ.type === 'mcq') {
+      if (!state.userInputs['mcq']) return;
       totalCount = 1;
       const userChoice = state.userInputs['mcq'];
       if (userChoice === currentQ.correctOptionId) {
@@ -133,13 +155,37 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     }));
   },
 
-  resetQuestion: (qId) => {
+  retryQuestion: (qId) => {
     const targetId = qId || get().activeQuestionId;
     set((prev) => {
       const newSubmitted = { ...prev.submittedQuestions };
       delete newSubmitted[targetId];
       return {
         submittedQuestions: newSubmitted,
+      };
+    });
+  },
+
+  toggleRevealAnswer: (qId) => {
+    const targetId = qId || get().activeQuestionId;
+    set((prev) => ({
+      revealedAnswers: {
+        ...prev.revealedAnswers,
+        [targetId]: !prev.revealedAnswers[targetId],
+      },
+    }));
+  },
+
+  resetQuestion: (qId) => {
+    const targetId = qId || get().activeQuestionId;
+    set((prev) => {
+      const newSubmitted = { ...prev.submittedQuestions };
+      const newRevealed = { ...prev.revealedAnswers };
+      delete newSubmitted[targetId];
+      delete newRevealed[targetId];
+      return {
+        submittedQuestions: newSubmitted,
+        revealedAnswers: newRevealed,
         userInputs: {},
       };
     });

@@ -3,15 +3,18 @@ import { CompletionQuestion } from '../../data/types';
 import { useQuizStore } from '../../store/quizStore';
 import { CodeViewer } from './CodeViewer';
 import { isAnswerCorrect } from '../../utils/evaluator';
-import { Edit3, CheckCircle2, XCircle, Lightbulb, HelpCircle } from 'lucide-react';
+import { Edit3, CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
+import { renderHighlightedCode, renderFormattedText } from '../../utils/syntaxHighlighter';
 
 interface CompletionReaderProps {
   question: CompletionQuestion;
 }
 
 export const CompletionReader: React.FC<CompletionReaderProps> = ({ question }) => {
-  const { userInputs, setUserInput, submittedQuestions } = useQuizStore();
+  const { userInputs, setUserInput, submittedQuestions, revealedAnswers, scores } = useQuizStore();
   const isSubmitted = submittedQuestions[question.id] || false;
+  const isRevealed = revealedAnswers[question.id] || false;
+  const isPassed = scores[question.id]?.isPassed || false;
 
   return (
     <div className="space-y-6">
@@ -61,13 +64,6 @@ export const CompletionReader: React.FC<CompletionReaderProps> = ({ question }) 
                     </span>
                     <span>{blank.label}</span>
                   </label>
-
-                  {blank.hint && !isSubmitted && (
-                    <span className="text-[11px] text-slate-400 flex items-center space-x-1">
-                      <HelpCircle className="w-3.5 h-3.5 text-amber-400" />
-                      <span>{blank.hint}</span>
-                    </span>
-                  )}
                 </div>
 
                 <div className="relative">
@@ -75,8 +71,8 @@ export const CompletionReader: React.FC<CompletionReaderProps> = ({ question }) 
                     type="text"
                     value={userVal}
                     onChange={(e) => setUserInput(key, e.target.value)}
-                    disabled={isSubmitted && correct}
-                    placeholder={blank.placeholder || 'Enter expression...'}
+                    disabled={isSubmitted && (correct || isRevealed)}
+                    placeholder="Enter code..."
                     className={inputStyles}
                   />
                   {isSubmitted && (
@@ -90,9 +86,18 @@ export const CompletionReader: React.FC<CompletionReaderProps> = ({ question }) 
                   )}
                 </div>
 
-                {isSubmitted && !correct && (
-                  <div className="text-xs text-emerald-400 font-mono font-medium pt-1">
-                    Expected Answer: <span className="underline">{expectedAns}</span>
+                {isSubmitted && isRevealed && (
+                  <div className="text-xs font-mono font-medium pt-1.5 min-h-[22px] flex items-center">
+                    {!correct ? (
+                      <span className="text-emerald-400">
+                        Expected Answer: <span className="underline ml-1">{renderHighlightedCode(expectedAns)}</span>
+                      </span>
+                    ) : (
+                      <span className="text-emerald-500/80 flex items-center space-x-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1 inline" />
+                        <span>Correct answer</span>
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -101,15 +106,15 @@ export const CompletionReader: React.FC<CompletionReaderProps> = ({ question }) 
         </div>
       </div>
 
-      {/* Explanation Box on submission */}
-      {isSubmitted && (
+      {/* Explanation Box on submission when passed or revealed */}
+      {isSubmitted && (isPassed || isRevealed) && (
         <div className="rounded-2xl border border-indigo-500/30 bg-indigo-950/20 p-5 space-y-2">
           <div className="flex items-center space-x-2 text-indigo-400 font-semibold text-xs uppercase tracking-wider">
             <Lightbulb className="w-4 h-4 text-amber-400" />
             <span>Explanation</span>
           </div>
           <p className="text-xs md:text-sm text-slate-300 whitespace-pre-line leading-relaxed">
-            {question.explanation}
+            {renderFormattedText(question.explanation)}
           </p>
         </div>
       )}
