@@ -14,9 +14,9 @@ import {
   RotateCcw, 
   Send, 
   CheckCircle2, 
-  HelpCircle, 
   BookOpen,
-  Eye
+  Eye,
+  Menu
 } from 'lucide-react';
 
 export function App() {
@@ -37,6 +37,7 @@ export function App() {
     scores,
     getFilteredQuestions,
     activeQuestionId,
+    toggleSidebar,
   } = useQuizStore();
 
   const currentQ = getActiveQuestion();
@@ -84,21 +85,27 @@ export function App() {
       <Header onOpenInstructorModal={() => setShowInstructorModal(true)} />
 
       {/* Main Container */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Left Sidebar */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        {/* Side Navigation (Overlay on Mobile, Push on Desktop) */}
         <Sidebar />
 
         {/* Workspace Area */}
-        <main className="flex-1 flex flex-col h-auto md:h-[calc(100vh-65px)] overflow-y-auto bg-slate-950">
+        <main className="flex-1 min-w-0 flex flex-col h-[calc(100vh-65px)] overflow-y-auto bg-slate-950 transition-all duration-300">
           {currentQ ? (
             <div className="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col justify-between space-y-6">
               {/* Question Meta Header */}
               <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5 md:p-6 shadow-xl space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center space-x-2">
-                    <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold uppercase bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                      {currentTopic?.title || currentQ.topicTitle}
-                    </span>
+                    <button
+                      onClick={() => toggleSidebar(true)}
+                      className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold uppercase bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 hover:border-indigo-500/40 flex items-center space-x-1.5 transition-all group cursor-pointer"
+                      title="Click to open topics & navigation menu"
+                    >
+                      <Menu className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                      <span>{currentTopic?.title || currentQ.topicTitle}</span>
+                    </button>
+
                     <span className="px-2.5 py-1 rounded-lg text-xs font-mono font-bold uppercase bg-slate-800 text-slate-400 border border-slate-700">
                       {currentQ.scope} Scope
                     </span>
@@ -158,7 +165,18 @@ export function App() {
                     className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium text-xs flex items-center space-x-1 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    <span>Previous</span>
+                    <span className="hidden sm:inline">Previous</span>
+                  </button>
+
+                  <button
+                    onClick={() => toggleSidebar(true)}
+                    className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium text-xs flex items-center space-x-1.5 transition-all"
+                    title="Open navigation menu to jump questions"
+                  >
+                    <Menu className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="font-mono font-semibold text-slate-200">
+                      {currentIndex + 1}/{allQuestions.length}
+                    </span>
                   </button>
 
                   <button
@@ -166,7 +184,7 @@ export function App() {
                     disabled={currentIndex >= allQuestions.length - 1}
                     className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white font-medium text-xs flex items-center space-x-1 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                   >
-                    <span>Next</span>
+                    <span className="hidden sm:inline">Next</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>

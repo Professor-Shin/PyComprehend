@@ -13,6 +13,7 @@ interface QuizState {
   revealedAnswers: Record<string, boolean>;
   scores: Record<string, { correct: number; total: number; isPassed: boolean }>;
   showScoreModal: boolean;
+  isSidebarOpen: boolean;
 
   // Actions
   setScope: (scope: 'all' | ExamScope) => void;
@@ -26,6 +27,7 @@ interface QuizState {
   nextQuestion: () => void;
   prevQuestion: () => void;
   toggleScoreModal: (show?: boolean) => void;
+  toggleSidebar: (open?: boolean) => void;
   
   // Helpers
   getActiveTopic: () => Topic | undefined;
@@ -44,6 +46,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   revealedAnswers: {},
   scores: {},
   showScoreModal: false,
+  isSidebarOpen: typeof window !== 'undefined' ? window.innerWidth >= 768 : true,
 
   setScope: (scope) => {
     const filteredTopics = getTopicsByScope(scope);
@@ -220,6 +223,12 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   toggleScoreModal: (show) => {
     set((state) => ({
       showScoreModal: show !== undefined ? show : !state.showScoreModal,
+    }));
+  },
+
+  toggleSidebar: (open) => {
+    set((state) => ({
+      isSidebarOpen: open !== undefined ? open : !state.isSidebarOpen,
     }));
   },
 
