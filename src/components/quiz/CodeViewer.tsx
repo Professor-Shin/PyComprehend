@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Copy, Check, Code2 } from 'lucide-react';
-
+import { renderHighlightedCode } from '../../utils/syntaxHighlighter';
+ 
 interface CodeViewerProps {
   code: string;
   highlightedLines?: number[];
@@ -11,8 +12,13 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({ code, highlightedLines =
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
-    // Strip asterisk markers if present before copy
-    const cleanCode = code.replace(/^\*\s*/gm, '');
+    // Strip line number prefix while preserving exact code indentation
+    const cleanCode = lines
+      .map((line) => {
+        const lineMatch = line.match(/^(\*?)(\d+): ?(.*)$/);
+        return lineMatch ? lineMatch[3] : line;
+      })
+      .join('\n');
     navigator.clipboard.writeText(cleanCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -59,12 +65,12 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({ code, highlightedLines =
         <table className="border-collapse w-full">
           <tbody>
             {lines.map((lineText, idx) => {
-              // Parse line format if it contains line number prefix like "1: a = 8" or "*5: a = a * 2"
+              // Parse line format if it contains line number prefix like "1: a = 8" or "*5:     a = a * 2"
               let lineNum = idx + 1;
               let isStarred = false;
               let codeContent = lineText;
 
-              const lineMatch = lineText.match(/^(\*?)(\d+):\s*(.*)$/);
+              const lineMatch = lineText.match(/^(\*?)(\d+): ?(.*)$/);
               if (lineMatch) {
                 isStarred = lineMatch[1] === '*';
                 lineNum = parseInt(lineMatch[2], 10);
@@ -87,7 +93,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({ code, highlightedLines =
                     {lineNum}
                   </td>
                   <td className="pl-4 py-0.5 whitespace-pre">
-                    {codeContent}
+                    {renderHighlightedCode(codeContent)}
                   </td>
                 </tr>
               );

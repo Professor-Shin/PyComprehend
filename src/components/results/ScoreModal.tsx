@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuizStore } from '../../store/quizStore';
-import { Trophy, CheckCircle2, XCircle, RefreshCw, X, Award, BarChart2 } from 'lucide-react';
+import { Trophy, CheckCircle2, XCircle, HelpCircle, X, BarChart2 } from 'lucide-react';
 
 export const ScoreModal: React.FC = () => {
   const { showScoreModal, toggleScoreModal, getFilteredQuestions, submittedQuestions, scores, scope } = useQuizStore();
@@ -83,12 +83,23 @@ export const ScoreModal: React.FC = () => {
 
           {questions.map((q) => {
             const isSubmitted = submittedQuestions[q.id];
-            const isPassed = scores[q.id]?.isPassed;
+            const score = scores[q.id];
+            const isPassed = Boolean(score?.isPassed);
+            const isPartial = isSubmitted && !isPassed && (score?.correct ?? 0) > 0;
+            const isFailed = isSubmitted && !isPassed && (score?.correct ?? 0) === 0;
 
             return (
               <div
                 key={q.id}
-                className="flex items-center justify-between p-3 rounded-xl bg-slate-950/40 border border-slate-800/80 text-xs"
+                className={`flex items-center justify-between p-3 rounded-xl border text-xs transition-all ${
+                  isPassed
+                    ? 'bg-emerald-950/20 border-emerald-500/30'
+                    : isPartial
+                    ? 'bg-amber-950/20 border-amber-500/30'
+                    : isFailed
+                    ? 'bg-rose-950/20 border-rose-500/30'
+                    : 'bg-slate-950/40 border-slate-800/80'
+                }`}
               >
                 <div className="flex items-center space-x-2.5">
                   <span className="px-2 py-0.5 rounded text-[10px] uppercase font-bold bg-slate-800 text-slate-400 border border-slate-700">
@@ -102,14 +113,19 @@ export const ScoreModal: React.FC = () => {
                 <div>
                   {isSubmitted ? (
                     isPassed ? (
-                      <span className="flex items-center space-x-1 text-emerald-400 font-semibold">
+                      <span className="flex items-center space-x-1 text-emerald-400 font-semibold font-mono">
                         <CheckCircle2 className="w-4 h-4" />
                         <span>Passed</span>
                       </span>
+                    ) : isPartial ? (
+                      <span className="flex items-center space-x-1 text-amber-400 font-semibold font-mono">
+                        <HelpCircle className="w-4 h-4" />
+                        <span>Partial ({score?.correct}/{score?.total})</span>
+                      </span>
                     ) : (
-                      <span className="flex items-center space-x-1 text-rose-400 font-semibold">
+                      <span className="flex items-center space-x-1 text-rose-400 font-semibold font-mono">
                         <XCircle className="w-4 h-4" />
-                        <span>Failed</span>
+                        <span>Failed (0/{score?.total || 1})</span>
                       </span>
                     )
                   ) : (

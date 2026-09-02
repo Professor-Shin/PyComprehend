@@ -4,14 +4,17 @@ import { useQuizStore } from '../../store/quizStore';
 import { CodeViewer } from './CodeViewer';
 import { isAnswerCorrect } from '../../utils/evaluator';
 import { Eye, CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
+import { renderHighlightedCode, renderFormattedText } from '../../utils/syntaxHighlighter';
 
 interface TracingReaderProps {
   question: TracingQuestion;
 }
 
 export const TracingReader: React.FC<TracingReaderProps> = ({ question }) => {
-  const { userInputs, setUserInput, submittedQuestions } = useQuizStore();
+  const { userInputs, setUserInput, submittedQuestions, revealedAnswers, scores } = useQuizStore();
   const isSubmitted = submittedQuestions[question.id] || false;
+  const isRevealed = revealedAnswers[question.id] || false;
+  const isPassed = scores[question.id]?.isPassed || false;
 
   const highlightedLineNumbers = question.targets.map((t) => t.line);
 
@@ -55,7 +58,7 @@ export const TracingReader: React.FC<TracingReaderProps> = ({ question }) => {
             <tbody>
               {question.targets.map((target) => (
                 <tr key={target.line} className="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors">
-                  <td className="p-3 text-xs font-semibold text-slate-300 font-mono">
+                  <td className="p-3 text-xs font-semibold text-slate-300 font-mono align-top pt-5">
                     <span className="text-amber-400 font-bold mr-1">*</span>Line {target.line}
                   </td>
                   {target.vars.map((v) => {
@@ -79,13 +82,13 @@ export const TracingReader: React.FC<TracingReaderProps> = ({ question }) => {
                     }
 
                     return (
-                      <td key={key} className="p-2.5">
+                      <td key={key} className="p-2.5 align-top">
                         <div className="relative">
                           <input
                             type="text"
                             value={userVal}
                             onChange={(e) => setUserInput(key, e.target.value)}
-                            disabled={isSubmitted && correct}
+                            disabled={isSubmitted && (correct || isRevealed)}
                             placeholder="-"
                             className={inputStyles}
                           />
@@ -100,9 +103,17 @@ export const TracingReader: React.FC<TracingReaderProps> = ({ question }) => {
                           )}
                         </div>
 
-                        {isSubmitted && !correct && (
-                          <div className="text-[11px] text-emerald-400 text-center font-mono font-medium mt-1">
-                            Expected: <span className="underline">{expectedAns}</span>
+                        {isSubmitted && isRevealed && (
+                          <div className="text-[11px] text-center font-mono font-medium mt-1.5 min-h-[20px] flex items-center justify-center">
+                            {!correct ? (
+                              <span className="text-emerald-400">
+                                Expected: <span className="underline ml-0.5">{renderHighlightedCode(expectedAns)}</span>
+                              </span>
+                            ) : (
+                              <span className="text-emerald-500/70">
+                                ✓ Correct
+                              </span>
+                            )}
                           </div>
                         )}
                       </td>
@@ -115,15 +126,15 @@ export const TracingReader: React.FC<TracingReaderProps> = ({ question }) => {
         </div>
       </div>
 
-      {/* Explanation Box on submission */}
-      {isSubmitted && (
+      {/* Explanation Box on submission when passed or revealed */}
+      {isSubmitted && (isPassed || isRevealed) && (
         <div className="rounded-2xl border border-indigo-500/30 bg-indigo-950/20 p-5 space-y-2">
           <div className="flex items-center space-x-2 text-indigo-400 font-semibold text-xs uppercase tracking-wider">
             <Lightbulb className="w-4 h-4 text-amber-400" />
             <span>Step-by-Step Explanation</span>
           </div>
           <p className="text-xs md:text-sm text-slate-300 whitespace-pre-line leading-relaxed">
-            {question.explanation}
+            {renderFormattedText(question.explanation)}
           </p>
         </div>
       )}

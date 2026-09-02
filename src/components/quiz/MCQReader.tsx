@@ -3,14 +3,17 @@ import { MCQQuestion } from '../../data/types';
 import { useQuizStore } from '../../store/quizStore';
 import { CodeViewer } from './CodeViewer';
 import { HelpCircle, CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
+import { renderHighlightedCode, renderFormattedText } from '../../utils/syntaxHighlighter';
 
 interface MCQReaderProps {
   question: MCQQuestion;
 }
 
 export const MCQReader: React.FC<MCQReaderProps> = ({ question }) => {
-  const { userInputs, setUserInput, submittedQuestions } = useQuizStore();
+  const { userInputs, setUserInput, submittedQuestions, revealedAnswers, scores } = useQuizStore();
   const isSubmitted = submittedQuestions[question.id] || false;
+  const isRevealed = revealedAnswers[question.id] || false;
+  const isPassed = scores[question.id]?.isPassed || false;
   const selectedOptionId = userInputs['mcq'] || '';
 
   return (
@@ -31,12 +34,13 @@ export const MCQReader: React.FC<MCQReaderProps> = ({ question }) => {
           {question.options.map((opt) => {
             const isSelected = selectedOptionId === opt.id;
             const isCorrectOption = question.correctOptionId === opt.id;
+            const showCorrectHighlight = isCorrectOption && (isPassed || isRevealed);
 
             let cardStyles =
               'flex items-center p-4 rounded-xl border cursor-pointer transition-all relative overflow-hidden ';
 
             if (isSubmitted) {
-              if (isCorrectOption) {
+              if (showCorrectHighlight) {
                 cardStyles +=
                   'bg-emerald-950/40 border-emerald-500/80 text-emerald-200 shadow-md shadow-emerald-950/20';
               } else if (isSelected && !isCorrectOption) {
@@ -59,7 +63,7 @@ export const MCQReader: React.FC<MCQReaderProps> = ({ question }) => {
                   value={opt.id}
                   checked={isSelected}
                   onChange={() => setUserInput('mcq', opt.id)}
-                  disabled={isSubmitted}
+                  disabled={isSubmitted && (isPassed || isRevealed)}
                   className="hidden"
                 />
 
@@ -67,9 +71,9 @@ export const MCQReader: React.FC<MCQReaderProps> = ({ question }) => {
                 <span
                   className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm font-mono mr-4 flex-shrink-0 transition-colors ${
                     isSubmitted
-                      ? isCorrectOption
+                      ? showCorrectHighlight
                         ? 'bg-emerald-500 text-slate-950'
-                        : isSelected
+                        : isSelected && !isCorrectOption
                         ? 'bg-rose-500 text-white'
                         : 'bg-slate-800 text-slate-500'
                       : isSelected
@@ -81,11 +85,11 @@ export const MCQReader: React.FC<MCQReaderProps> = ({ question }) => {
                 </span>
 
                 <span className={`flex-1 text-sm ${opt.isCodeFont ? 'font-mono' : 'font-sans'}`}>
-                  {opt.text}
+                  {opt.isCodeFont ? renderHighlightedCode(opt.text) : opt.text}
                 </span>
 
                 {/* Feedback Icons */}
-                {isSubmitted && isCorrectOption && (
+                {isSubmitted && showCorrectHighlight && (
                   <CheckCircle2 className="w-5 h-5 text-emerald-400 ml-3 flex-shrink-0" />
                 )}
                 {isSubmitted && isSelected && !isCorrectOption && (
@@ -97,15 +101,15 @@ export const MCQReader: React.FC<MCQReaderProps> = ({ question }) => {
         </div>
       </div>
 
-      {/* Explanation Box on submission */}
-      {isSubmitted && (
+      {/* Explanation Box on submission when passed or revealed */}
+      {isSubmitted && (isPassed || isRevealed) && (
         <div className="rounded-2xl border border-indigo-500/30 bg-indigo-950/20 p-5 space-y-2">
           <div className="flex items-center space-x-2 text-indigo-400 font-semibold text-xs uppercase tracking-wider">
             <Lightbulb className="w-4 h-4 text-amber-400" />
             <span>Detailed Explanation</span>
           </div>
           <p className="text-xs md:text-sm text-slate-300 whitespace-pre-line leading-relaxed">
-            {question.explanation}
+            {renderFormattedText(question.explanation)}
           </p>
         </div>
       )}
