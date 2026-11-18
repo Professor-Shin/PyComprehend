@@ -1,122 +1,132 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CompletionQuestion } from '../../data/types';
 import { useQuizStore } from '../../store/quizStore';
 import { CodeViewer } from './CodeViewer';
-import { isAnswerCorrect } from '../../utils/evaluator';
-import { Edit3, CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
-import { renderHighlightedCode, renderFormattedText } from '../../utils/syntaxHighlighter';
+import { ExplanationPanel } from './ExplanationPanel';
+import { CheckCircle2, XCircle, Sparkles, Lightbulb } from 'lucide-react';
+import { renderHighlightedCode } from '../../utils/syntaxHighlighter';
 
-interface CompletionReaderProps {
-  question: CompletionQuestion;
-}
-
-export const CompletionReader: React.FC<CompletionReaderProps> = ({ question }) => {
-  const { userInputs, setUserInput, submittedQuestions, revealedAnswers, scores } = useQuizStore();
+export const CompletionReader: React.FC<{ question: CompletionQuestion }> = ({ question }) => {
+  const { getInput, setUserInput, submittedQuestions, revealedAnswers, scores, getVerdict } =
+    useQuizStore();
   const isSubmitted = submittedQuestions[question.id] || false;
   const isRevealed = revealedAnswers[question.id] || false;
   const isPassed = scores[question.id]?.isPassed || false;
 
-  return (
-    <div className="space-y-6">
-      {/* Code snippet with blank placeholders */}
-      <CodeViewer code={question.codeSnippet} />
+  // Hints are opt-in, per blank, and reset when the question changes.
+  const [shownHints, setShownHints] = useState<Record<string, boolean>>({});
+  const questionRef = React.useRef(question.id);
+  if (questionRef.current !== question.id) {
+    questionRef.current = question.id;
+    if (Object.keys(shownHints).length) setShownHints({});
+  }
 
-      {/* Fill-in Blanks Input Form */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 md:p-6 shadow-xl backdrop-blur-sm space-y-4">
-        <div className="flex items-center space-x-2.5 text-amber-400">
-          <Edit3 className="w-5 h-5" />
-          <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">
-            Fill in the Missing Code
-          </h3>
+  return (
+    <div className="space-y-5">
+      <CodeViewer code={question.codeSnippet} stdin={question.verify?.stdin} />
+
+      <section className="rounded-2xl border border-subtle bg-surface p-5 md:p-6 space-y-4">
+        <div className="space-y-1">
+          <h3 className="text-sm font-semibold text-primary">Fill in the missing code</h3>
+          <p className="text-xs text-muted">
+            Spacing does not matter — your answer is checked by running it.
+          </p>
         </div>
 
-        <p className="text-xs text-slate-400">
-          Complete the code by providing the missing expressions, operators, or syntax for each blank.
-        </p>
-
-        <div className="grid grid-cols-1 gap-4 pt-2">
+        <div className="grid grid-cols-1 gap-3">
           {question.blanks.map((blank) => {
             const key = blank.id;
             const expectedAns = question.answers[key];
-            const userVal = userInputs[key] || '';
-            const correct = isAnswerCorrect(userVal, expectedAns);
+            const userVal = getInput(key);
+            const verdict = getVerdict(question.id, key);
+            const correct = verdict?.correct ?? false;
+            const inputId = `blank-${question.id}-${key}`;
 
-            let inputStyles =
-              'w-full p-3 rounded-xl font-mono text-sm border bg-slate-950 text-slate-100 focus:outline-none focus:ring-2 transition-all';
-            if (isSubmitted) {
-              if (correct) {
-                inputStyles =
-                  'w-full p-3 rounded-xl font-mono text-sm border border-emerald-500/60 bg-emerald-950/40 text-emerald-300 focus:outline-none';
-              } else {
-                inputStyles =
-                  'w-full p-3 rounded-xl font-mono text-sm border border-rose-500/60 bg-rose-950/40 text-rose-300 focus:outline-none';
-              }
-            } else {
-              inputStyles += ' border-slate-700/80 focus:border-amber-500 focus:ring-amber-500/20';
-            }
+            const state = !isSubmitted ? 'pending' : correct ? 'ok' : 'err';
+            const fieldStyles = {
+              pending: 'border-strong bg-sunken text-primary focus:border-accent',
+              ok: 'border-ok-line bg-ok-tint text-ok',
+              err: 'border-err-line bg-err-tint text-err',
+            }[state];
 
             return (
-              <div key={key} className="space-y-1.5 bg-slate-950/40 p-4 rounded-xl border border-slate-800/60">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold text-slate-300 flex items-center space-x-2">
-                    <span className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center font-mono font-bold">
-                      [{blank.id}]
-                    </span>
-                    <span>{blank.label}</span>
-                  </label>
-                </div>
+              <div key={key} className="space-y-2">
+                <label
+                  htmlFor={inputId}
+                  className="text-xs font-medium text-muted flex items-center gap-2"
+                >
+                  <span className="w-5 h-5 rounded bg-fill-tint text-fill border border-fill-line flex items-center justify-center font-mono text-[10px] font-semibold">
+                    {blank.id}
+                  </span>
+                  {blank.label}
+                </label>
 
                 <div className="relative">
                   <input
+                    id={inputId}
                     type="text"
                     value={userVal}
                     onChange={(e) => setUserInput(key, e.target.value)}
                     disabled={isSubmitted && (correct || isRevealed)}
-                    placeholder="Enter code..."
-                    className={inputStyles}
+                    placeholder="Type your answer…"
+                    aria-invalid={isSubmitted ? !correct : undefined}
+                    aria-describedby={blank.hint ? `${inputId}-hint` : undefined}
+                    className={`w-full py-2.5 pl-3 pr-10 rounded-xl font-mono text-sm border outline-none transition-colors disabled:opacity-90 ${fieldStyles}`}
                   />
                   {isSubmitted && (
-                    <div className="absolute right-3 top-3.5">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2">
                       {correct ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                        <CheckCircle2 className="w-4 h-4 text-ok" aria-label="Correct" />
                       ) : (
-                        <XCircle className="w-5 h-5 text-rose-400" />
+                        <XCircle className="w-4 h-4 text-err" aria-label="Incorrect" />
                       )}
-                    </div>
+                    </span>
                   )}
                 </div>
 
-                {isSubmitted && isRevealed && (
-                  <div className="text-xs font-mono font-medium pt-1.5 min-h-[22px] flex items-center">
-                    {!correct ? (
-                      <span className="text-emerald-400">
-                        Expected Answer: <span className="underline ml-1">{renderHighlightedCode(expectedAns)}</span>
-                      </span>
-                    ) : (
-                      <span className="text-emerald-500/80 flex items-center space-x-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 mr-1 inline" />
-                        <span>Correct answer</span>
-                      </span>
-                    )}
-                  </div>
+                {blank.hint && !isSubmitted && (
+                  shownHints[key] ? (
+                    <p
+                      id={`${inputId}-hint`}
+                      className="text-[11px] text-muted flex items-start gap-1.5"
+                    >
+                      <Lightbulb className="w-3 h-3 mt-0.5 flex-shrink-0 text-fill" aria-hidden="true" />
+                      {blank.hint}
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShownHints((h) => ({ ...h, [key]: true }))}
+                      className="text-[11px] text-faint hover:text-muted flex items-center gap-1.5 transition-colors"
+                    >
+                      <Lightbulb className="w-3 h-3" aria-hidden="true" />
+                      Show hint
+                    </button>
+                  )
+                )}
+
+                {/* Tell the student when their spelling differed but still ran correctly —
+                    otherwise a pass that does not match the model answer looks like a bug. */}
+                {isSubmitted && verdict?.acceptedVariant && (
+                  <p className="text-[11px] text-ok flex items-center gap-1.5">
+                    <Sparkles className="w-3 h-3" aria-hidden="true" />
+                    Different wording from the model answer, but it produces the same result.
+                  </p>
+                )}
+
+                {isSubmitted && isRevealed && !correct && (
+                  <p className="text-[11px] font-mono text-ok">
+                    Expected: {renderHighlightedCode(expectedAns)}
+                  </p>
                 )}
               </div>
             );
           })}
         </div>
-      </div>
+      </section>
 
-      {/* Explanation Box on submission when passed or revealed */}
       {isSubmitted && (isPassed || isRevealed) && (
-        <div className="rounded-2xl border border-indigo-500/30 bg-indigo-950/20 p-5 space-y-2">
-          <div className="flex items-center space-x-2 text-indigo-400 font-semibold text-xs uppercase tracking-wider">
-            <Lightbulb className="w-4 h-4 text-amber-400" />
-            <span>Explanation</span>
-          </div>
-          <p className="text-xs md:text-sm text-slate-300 whitespace-pre-line leading-relaxed">
-            {renderFormattedText(question.explanation)}
-          </p>
-        </div>
+        <ExplanationPanel text={question.explanation} />
       )}
     </div>
   );
