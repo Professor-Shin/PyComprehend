@@ -130,6 +130,9 @@ print(res)`,
       answers: {
         '1': '='
       },
+      // QA-only: the snippet only defines `increment`, so it must be called for
+      // execution to tell a right answer from a wrong one.
+      verify: { postlude: 'print(increment(5), increment(5, 3))' },
       explanation: 'In Python function signatures, default parameter values are defined using the `=` sign (e.g., `step = 1`).'
     },
     {
@@ -159,6 +162,78 @@ print(a(x))`,
       ],
       correctOptionId: 'A',
       explanation: 'When `a(x)` is called, inside `a`: `x` is set to `5`. Then `b(5)` is called, returning `5 ** 2 = 25`. Then `a` returns `25 * 2 = 50`. Thus `print(a(x))` outputs `50`.'
+    },
+    {
+      id: 'func_07',
+      topicId: '04_functions',
+      topicTitle: 'Functions & Scope',
+      scope: 'final',
+      title: 'Mutable Default Argument',
+      type: 'mcq',
+      difficulty: 'hard',
+      description: 'What does this script print?',
+      codeSnippet: `def add_item(item, bag=[]):
+    bag.append(item)
+    return bag
+
+print(add_item('a'))
+print(add_item('b'))`,
+      options: [
+        { id: 'A', text: "['a'] then ['b']", isCodeFont: true },
+        { id: 'B', text: "['a'] then ['a', 'b']", isCodeFont: true },
+        { id: 'C', text: "['a', 'b'] then ['a', 'b']", isCodeFont: true },
+        { id: 'D', text: "['a'] then ['a']", isCodeFont: true },
+        { id: 'E', text: 'TypeError: mutable default argument', isCodeFont: false }
+      ],
+      correctOptionId: 'B',
+      explanation: "A default argument is evaluated **once**, when the `def` statement runs — not on each call. So every call that omits `bag` shares the *same* list object.\nThe first call appends to the empty list and prints `['a']`. The second call appends to that same, now non-empty list and prints `['a', 'b']`.\nAnswer A is what most people expect, and what you get by writing `bag=None` and creating a fresh list inside the function."
+    },
+    {
+      id: 'func_08',
+      topicId: '04_functions',
+      topicTitle: 'Functions & Scope',
+      scope: 'final',
+      title: 'Mutating an Argument versus Rebinding It',
+      type: 'tracing',
+      difficulty: 'hard',
+      description: 'Give the values of `data` and `result` **after line 7 has executed**.',
+      codeSnippet: `1: def grow(lst, n):
+2:     lst.append(n)
+3:     n = n + 100
+4:     return n
+5: data = [1]
+6: result = grow(data, 5)
+*7: print(data, result)`,
+      variablesToTrack: ['data', 'result'],
+      targets: [
+        { line: 7, vars: ['data', 'result'] }
+      ],
+      answers: {
+        '7-data': '[1, 5]',
+        '7-result': '105'
+      },
+      explanation: 'Both parameters receive a reference to the caller’s object, but the two lines do different things.\nLine 2 **mutates** the list that `lst` and `data` both point at, so the caller sees `[1, 5]`.\nLine 3 **rebinds** the local name `n` to a new int. Ints are immutable and rebinding a local never touches the caller, so the `5` passed in is unaffected — the only way the new value escapes is the `return` on line 4.'
+    },
+    {
+      id: 'func_09',
+      topicId: '04_functions',
+      topicTitle: 'Functions & Scope',
+      scope: 'final',
+      title: 'Returning a Computed Value',
+      type: 'completion',
+      difficulty: 'easy',
+      description: 'Fill in blank [1] so `area(3, 4)` prints `12`.',
+      codeSnippet: `def area(width, height):
+    return ___1___
+
+print(area(3, 4))`,
+      blanks: [
+        { id: '1', label: 'Blank [1] (expression to return)', placeholder: 'e.g. width * height', hint: 'Use the parameter names, not the numbers 3 and 4' }
+      ],
+      answers: {
+        '1': 'width * height'
+      },
+      explanation: 'The function must work for any arguments, so the body uses the **parameter names**. When called as `area(3, 4)`, `width` is bound to `3` and `height` to `4`, and `return` hands `12` back to `print`.\nWriting `3 * 4` would also print `12` here but would return `12` for every call, which defeats the purpose of the parameters.'
     }
   ]
 };

@@ -65,6 +65,9 @@ else:
         '1': '>=',
         '2': '>='
       },
+      // QA-only: the snippet reads a `score` it never defines. Three probes, one per
+      // branch, so that `>` cannot pass where `>=` is required (85 alone would accept both).
+      verify: { probes: ['score = 85', 'score = 80', 'score = 50', 'score = 49'], prelude: 'score = 85', assert: "result == 'Excellent'" },
       explanation: 'Outer condition checks if score is `>= 50`. If true, inner condition checks if score is `>= 80` for "Excellent", otherwise "Pass". If `< 50`, it hits the outer else for "Fail".'
     },
     {
@@ -101,24 +104,24 @@ else:
       title: 'Short-Circuit Evaluation Tracing',
       type: 'tracing',
       difficulty: 'hard',
-      description: 'Trace variables `x`, `y`, and `flag` at line 6.',
+      description: 'Give the values of `x`, `y` and `flag` **immediately before line 7 executes** — that is, at the moment control reaches the `else` branch.',
       codeSnippet: `1: x = 5
 2: y = 0
 3: flag = False
 4: if y != 0 and x / y > 2:
 5:     flag = True
-*6: else:
-7:     flag = (x > 3 or y > 5)`,
+6: else:
+*7:     flag = (x > 3 or y > 5)`,
       variablesToTrack: ['x', 'y', 'flag'],
       targets: [
-        { line: 6, vars: ['x', 'y', 'flag'] }
+        { line: 7, vars: ['x', 'y', 'flag'] }
       ],
       answers: {
-        '6-x': '5',
-        '6-y': '0',
-        '6-flag': 'False'
+        '7-x': '5',
+        '7-y': '0',
+        '7-flag': 'False'
       },
-      explanation: 'In line 4: `y != 0` (0 != 0) evaluates to `False`. Due to short-circuit evaluation of `and`, `x / y > 2` is never executed (avoiding ZeroDivisionError!). Execution jumps to `else` at line 6, where `flag` is still `False`.'
+      explanation: 'In line 4: `y != 0` (0 != 0) evaluates to `False`. Due to short-circuit evaluation of `and`, `x / y > 2` is never executed (avoiding ZeroDivisionError!). Execution jumps to the `else` branch, and just before line 7 runs `flag` is still `False` from line 3. (Line 7 then overwrites it with `True`.)'
     },
     {
       id: 'cond_05',
@@ -163,6 +166,83 @@ else:
         '1': '%'
       },
       explanation: 'The `%` operator returns remainder of division. `year % 4 == 0` checks if `year` is evenly divisible by 4.'
+    },
+    {
+      id: 'cond_07',
+      topicId: '02_conditionals',
+      topicTitle: 'Conditionals & Boolean Logic',
+      scope: 'midterm',
+      title: 'Truthiness of Values',
+      type: 'mcq',
+      difficulty: 'medium',
+      description: 'What does this script print?',
+      codeSnippet: `values = [0, '', [], '0', 3]
+count = 0
+for v in values:
+    if v:
+        count += 1
+print(count)`,
+      options: [
+        { id: 'A', text: '5', isCodeFont: true },
+        { id: 'B', text: '3', isCodeFont: true },
+        { id: 'C', text: '2', isCodeFont: true },
+        { id: 'D', text: '0', isCodeFont: true },
+        { id: 'E', text: '1', isCodeFont: true }
+      ],
+      correctOptionId: 'C',
+      explanation: "`if v:` tests the value's **truthiness**, not whether it exists.\nFalsy: `0`, `''` (empty string), `[]` (empty list).\nTruthy: `'0'` — a string containing the character zero is **not** empty, so it counts — and `3`.\nThat gives `2`. Answer B is the trap of thinking `'0'` is falsy like `0`."
+    },
+    {
+      id: 'cond_08',
+      topicId: '02_conditionals',
+      topicTitle: 'Conditionals & Boolean Logic',
+      scope: 'midterm',
+      title: 'Identity (is) versus Equality (==)',
+      type: 'tracing',
+      difficulty: 'hard',
+      description: 'Give the value of `x`, `y` and `z` **after line 6 has executed**. Each line runs exactly once.',
+      codeSnippet: `1: a = [1, 2]
+2: b = [1, 2]
+3: c = a
+4: x = (a == b)
+5: y = (a is b)
+*6: z = (a is c)`,
+      variablesToTrack: ['x', 'y', 'z'],
+      targets: [
+        { line: 6, vars: ['x', 'y', 'z'] }
+      ],
+      answers: {
+        '6-x': 'True',
+        '6-y': 'False',
+        '6-z': 'True'
+      },
+      explanation: '`==` asks "do these hold the same contents?" — `a` and `b` both hold `[1, 2]`, so `x` is `True`.\n`is` asks "are these the same object in memory?" Lines 1 and 2 build **two separate lists** that merely look alike, so `y` is `False`.\nLine 3 does not copy anything; it makes `c` another name for the *same* list as `a`. So `z` is `True`.\nThis is why mutating through `c` would also change `a`.'
+    },
+    {
+      id: 'cond_09',
+      topicId: '02_conditionals',
+      topicTitle: 'Conditionals & Boolean Logic',
+      scope: 'midterm',
+      title: 'Ordering an if/elif Chain',
+      type: 'completion',
+      difficulty: 'medium',
+      description: 'Fill in blank [1] so `label` is:\n- `"Hot"` when `temp` is 30 or above\n- `"Warm"` when `temp` is 15 to 29\n- `"Cold"` below 15',
+      codeSnippet: `if ___1___:
+    label = 'Hot'
+elif temp >= 15:
+    label = 'Warm'
+else:
+    label = 'Cold'`,
+      blanks: [
+        { id: '1', label: 'Blank [1] (condition)', placeholder: 'e.g. temp >= 30', hint: 'This branch is tested first, so it must catch the highest range' }
+      ],
+      answers: {
+        '1': 'temp >= 30'
+      },
+      // QA-only: `temp` comes from outside the snippet. One probe per branch, both
+      // boundaries included, so `>` cannot pass where `>=` is required.
+      verify: { probes: ['temp = 35', 'temp = 30', 'temp = 25', 'temp = 15', 'temp = 10'] },
+      explanation: 'An `if`/`elif` chain stops at the **first** branch that is true, so the branches must be ordered from most restrictive to least.\nAt `temp = 30` the condition must already be true, which is why it is `>=` and not `>`. If the chain started with `temp >= 15`, every hot day would be labelled `"Warm"` and the `"Hot"` branch would be unreachable.'
     }
   ]
 };
