@@ -150,6 +150,75 @@ greeting = f"Hello ___1___, score: {score}"`,
         '1': '{name}'
       },
       explanation: 'Inside f-strings, variable interpolation uses curly braces `{variable_name}` to inject values into the formatted string.'
+    },
+    {
+      id: 'var_07',
+      topicId: '01_variables_io',
+      topicTitle: 'Variables, Types & I/O',
+      scope: 'midterm',
+      title: 'Input Returns a String',
+      type: 'mcq',
+      difficulty: 'medium',
+      description: 'The user types `20` at the prompt. What happens when this script runs?',
+      codeSnippet: `age = input('Enter age: ')
+next_age = age + 1
+print(next_age)`,
+      options: [
+        { id: 'A', text: '21', isCodeFont: true },
+        { id: 'B', text: "'201'", isCodeFont: true },
+        { id: 'C', text: 'TypeError: can only concatenate str (not "int") to str', isCodeFont: false },
+        { id: 'D', text: '20', isCodeFont: true },
+        { id: 'E', text: 'ValueError: invalid literal for int()', isCodeFont: false }
+      ],
+      correctOptionId: 'C',
+      verify: { stdin: ['20'] },
+      explanation: '`input()` always returns a **string**, never a number — even when the user types digits. So `age` is `"20"`, and `"20" + 1` tries to concatenate a string with an int, which Python refuses.\nOption A is what you get only after `int(age) + 1`. Option B would be the result of `age + "1"` (string concatenation).'
+    },
+    {
+      id: 'var_08',
+      topicId: '01_variables_io',
+      topicTitle: 'Variables, Types & I/O',
+      scope: 'midterm',
+      title: 'True Division, Floor Division & Rounding',
+      type: 'tracing',
+      difficulty: 'medium',
+      description: 'Give the value of each variable **immediately after** its marked line has finished executing. Each marked line runs exactly once.',
+      codeSnippet: `1: a = 7
+2: b = 2
+3: c = a / b
+*4: d = a // b
+*5: e = round(c)`,
+      variablesToTrack: ['c', 'd', 'e'],
+      targets: [
+        { line: 4, vars: ['c', 'd'] },
+        { line: 5, vars: ['e'] }
+      ],
+      answers: {
+        '4-c': '3.5',
+        '4-d': '3',
+        '5-e': '4'
+      },
+      explanation: '`/` is **true division** and always produces a float: `7 / 2` is `3.5`, not `3`.\n`//` is **floor division**, which discards the fractional part: `7 // 2` is `3` (an int).\n`round(3.5)` is `4` here. Note that Python rounds halves to the nearest *even* number, so `round(2.5)` is `2`, not `3`.'
+    },
+    {
+      id: 'var_09',
+      topicId: '01_variables_io',
+      topicTitle: 'Variables, Types & I/O',
+      scope: 'midterm',
+      title: 'Building a Bar with String Repetition',
+      type: 'completion',
+      difficulty: 'easy',
+      description: 'Fill in blank [1] so the program prints a bar of exactly `width` asterisks — here, `*****`.',
+      codeSnippet: `width = 5
+bar = ___1___
+print(bar)`,
+      blanks: [
+        { id: '1', label: 'Blank [1] (expression)', placeholder: "e.g. '*' * width", hint: 'The * operator repeats a string when one side is an int' }
+      ],
+      answers: {
+        '1': "'*' * width"
+      },
+      explanation: "Multiplying a string by an int repeats it: `'*' * 5` gives `'*****'`. This is different from `'*' + 5`, which raises a `TypeError` — `+` joins two strings, `*` repeats one."
     }
   ]
 };

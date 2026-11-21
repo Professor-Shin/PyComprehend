@@ -31,13 +31,13 @@ export const renderHighlightedCode = (line: string | number): React.ReactNode =>
 
     if (comment) {
       elements.push(
-        <span key={key} className="text-slate-500 italic font-normal">
+        <span key={key} className="text-syn-com italic">
           {comment}
         </span>
       );
     } else if (str) {
       elements.push(
-        <span key={key} className="text-emerald-400 font-mono">
+        <span key={key} className="text-syn-str">
           {str}
         </span>
       );
@@ -45,38 +45,38 @@ export const renderHighlightedCode = (line: string | number): React.ReactNode =>
       elements.push(
         <span
           key={key}
-          className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40 inline-block text-xs"
+          className="px-1.5 py-0.5 rounded bg-fill-tint text-fill font-semibold border border-fill-line inline-block text-xs"
         >
           {blank}
         </span>
       );
     } else if (keyword) {
       elements.push(
-        <span key={key} className="text-indigo-400 font-semibold">
+        <span key={key} className="text-syn-kw font-semibold">
           {keyword}
         </span>
       );
     } else if (constant) {
       elements.push(
-        <span key={key} className="text-amber-400 font-medium">
+        <span key={key} className="text-syn-num font-medium">
           {constant}
         </span>
       );
     } else if (builtin) {
       elements.push(
-        <span key={key} className="text-sky-400 font-mono">
+        <span key={key} className="text-syn-fn">
           {builtin}
         </span>
       );
     } else if (number) {
       elements.push(
-        <span key={key} className="text-amber-300 font-mono">
+        <span key={key} className="text-syn-num">
           {number}
         </span>
       );
     } else {
       elements.push(
-        <span key={key} className="text-slate-200">
+        <span key={key} className="text-syn-op">
           {other || fullMatch}
         </span>
       );
@@ -106,7 +106,7 @@ export const renderFormattedText = (text: string): React.ReactNode => {
       return (
         <code
           key={index}
-          className="px-1.5 py-0.5 mx-0.5 rounded-lg bg-slate-900/90 border border-slate-700/60 font-mono text-[11px] sm:text-xs text-slate-200 inline-block shadow-sm"
+          className="px-1.5 py-0.5 mx-0.5 rounded border border-subtle bg-sunken font-mono text-[11px] sm:text-xs inline-block"
         >
           {renderHighlightedCode(codeContent)}
         </code>
@@ -116,7 +116,7 @@ export const renderFormattedText = (text: string): React.ReactNode => {
     if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
       const boldContent = part.slice(2, -2);
       return (
-        <strong key={index} className="font-bold text-slate-100">
+        <strong key={index} className="font-semibold text-primary">
           {boldContent}
         </strong>
       );

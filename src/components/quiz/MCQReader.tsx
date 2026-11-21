@@ -2,116 +2,72 @@ import React from 'react';
 import { MCQQuestion } from '../../data/types';
 import { useQuizStore } from '../../store/quizStore';
 import { CodeViewer } from './CodeViewer';
-import { HelpCircle, CheckCircle2, XCircle, Lightbulb } from 'lucide-react';
-import { renderHighlightedCode, renderFormattedText } from '../../utils/syntaxHighlighter';
+import { ExplanationPanel } from './ExplanationPanel';
+import { CheckCircle2, XCircle } from 'lucide-react';
+import { renderHighlightedCode } from '../../utils/syntaxHighlighter';
 
-interface MCQReaderProps {
-  question: MCQQuestion;
-}
-
-export const MCQReader: React.FC<MCQReaderProps> = ({ question }) => {
-  const { userInputs, setUserInput, submittedQuestions, revealedAnswers, scores } = useQuizStore();
+export const MCQReader: React.FC<{ question: MCQQuestion }> = ({ question }) => {
+  const { getInput, setUserInput, submittedQuestions, revealedAnswers, scores } = useQuizStore();
   const isSubmitted = submittedQuestions[question.id] || false;
   const isRevealed = revealedAnswers[question.id] || false;
   const isPassed = scores[question.id]?.isPassed || false;
-  const selectedOptionId = userInputs['mcq'] || '';
+  const selectedOptionId = getInput('mcq');
 
   return (
-    <div className="space-y-6">
-      {/* Code Snippet for MCQ context */}
-      <CodeViewer code={question.codeSnippet} />
+    <div className="space-y-5">
+      <CodeViewer code={question.codeSnippet} stdin={question.verify?.stdin} />
 
-      {/* MCQ Options Form */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 md:p-6 shadow-xl backdrop-blur-sm space-y-4">
-        <div className="flex items-center space-x-2.5 text-indigo-400">
-          <HelpCircle className="w-5 h-5" />
-          <h3 className="text-sm font-semibold text-slate-200 uppercase tracking-wider">
-            Select the Correct Option
-          </h3>
-        </div>
+      <fieldset className="rounded-2xl border border-subtle bg-surface p-5 md:p-6 space-y-3">
+        <legend className="sr-only">Answer options</legend>
+        <h3 className="text-sm font-semibold text-primary">Select the correct option</h3>
 
-        <div className="space-y-3 pt-1">
+        <div className="space-y-2 pt-1">
           {question.options.map((opt) => {
             const isSelected = selectedOptionId === opt.id;
             const isCorrectOption = question.correctOptionId === opt.id;
-            const showCorrectHighlight = isCorrectOption && (isPassed || isRevealed);
+            const showCorrect = isCorrectOption && isSubmitted && (isPassed || isRevealed);
+            const showWrong = isSubmitted && isSelected && !isCorrectOption;
+            const locked = isSubmitted && (isPassed || isRevealed);
 
-            let cardStyles =
-              'flex items-center p-4 rounded-xl border cursor-pointer transition-all relative overflow-hidden ';
+            let rowStyles =
+              'flex items-center gap-3 p-3.5 rounded-xl border transition-colors ';
+            if (showCorrect) rowStyles += 'border-ok-line bg-ok-tint text-ok';
+            else if (showWrong) rowStyles += 'border-err-line bg-err-tint text-err';
+            else if (isSubmitted) rowStyles += 'border-subtle text-faint';
+            else if (isSelected) rowStyles += 'border-accent bg-accent-tint text-primary cursor-pointer';
+            else rowStyles += 'border-subtle text-muted hover:border-strong cursor-pointer';
 
-            if (isSubmitted) {
-              if (showCorrectHighlight) {
-                cardStyles +=
-                  'bg-emerald-950/40 border-emerald-500/80 text-emerald-200 shadow-md shadow-emerald-950/20';
-              } else if (isSelected && !isCorrectOption) {
-                cardStyles +=
-                  'bg-rose-950/40 border-rose-500/80 text-rose-200 shadow-md shadow-rose-950/20';
-              } else {
-                cardStyles += 'bg-slate-950/30 border-slate-800/60 text-slate-500 opacity-50 cursor-not-allowed';
-              }
-            } else {
-              cardStyles += isSelected
-                ? 'bg-indigo-600/20 border-indigo-500 text-indigo-100 shadow-lg shadow-indigo-950/30 ring-1 ring-indigo-500'
-                : 'bg-slate-950/40 border-slate-800/80 text-slate-300 hover:bg-slate-800/60 hover:border-slate-700';
-            }
+            let badgeStyles = 'w-7 h-7 rounded-lg flex items-center justify-center font-mono text-xs font-semibold flex-shrink-0 border ';
+            if (showCorrect) badgeStyles += 'border-ok-line bg-ok text-canvas';
+            else if (showWrong) badgeStyles += 'border-err-line bg-err text-canvas';
+            else if (isSelected && !isSubmitted) badgeStyles += 'border-accent bg-accent text-white';
+            else badgeStyles += 'border-subtle text-faint';
 
             return (
-              <label key={opt.id} className={cardStyles}>
+              <label key={opt.id} className={rowStyles}>
                 <input
                   type="radio"
                   name={`mcq-${question.id}`}
                   value={opt.id}
                   checked={isSelected}
                   onChange={() => setUserInput('mcq', opt.id)}
-                  disabled={isSubmitted && (isPassed || isRevealed)}
-                  className="hidden"
+                  disabled={locked}
+                  className="sr-only peer"
                 />
-
-                {/* Option Badge A, B, C, D */}
-                <span
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm font-mono mr-4 flex-shrink-0 transition-colors ${
-                    isSubmitted
-                      ? showCorrectHighlight
-                        ? 'bg-emerald-500 text-slate-950'
-                        : isSelected && !isCorrectOption
-                        ? 'bg-rose-500 text-white'
-                        : 'bg-slate-800 text-slate-500'
-                      : isSelected
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
-                      : 'bg-slate-800 text-slate-400'
-                  }`}
-                >
-                  {opt.id}
-                </span>
-
+                <span className={badgeStyles} aria-hidden="true">{opt.id}</span>
                 <span className={`flex-1 text-sm ${opt.isCodeFont ? 'font-mono' : 'font-sans'}`}>
                   {opt.isCodeFont ? renderHighlightedCode(opt.text) : opt.text}
                 </span>
-
-                {/* Feedback Icons */}
-                {isSubmitted && showCorrectHighlight && (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400 ml-3 flex-shrink-0" />
-                )}
-                {isSubmitted && isSelected && !isCorrectOption && (
-                  <XCircle className="w-5 h-5 text-rose-400 ml-3 flex-shrink-0" />
-                )}
+                {showCorrect && <CheckCircle2 className="w-4 h-4 text-ok flex-shrink-0" aria-label="Correct answer" />}
+                {showWrong && <XCircle className="w-4 h-4 text-err flex-shrink-0" aria-label="Your answer, incorrect" />}
               </label>
             );
           })}
         </div>
-      </div>
+      </fieldset>
 
-      {/* Explanation Box on submission when passed or revealed */}
       {isSubmitted && (isPassed || isRevealed) && (
-        <div className="rounded-2xl border border-indigo-500/30 bg-indigo-950/20 p-5 space-y-2">
-          <div className="flex items-center space-x-2 text-indigo-400 font-semibold text-xs uppercase tracking-wider">
-            <Lightbulb className="w-4 h-4 text-amber-400" />
-            <span>Detailed Explanation</span>
-          </div>
-          <p className="text-xs md:text-sm text-slate-300 whitespace-pre-line leading-relaxed">
-            {renderFormattedText(question.explanation)}
-          </p>
-        </div>
+        <ExplanationPanel text={question.explanation} title="Detailed explanation" />
       )}
     </div>
   );

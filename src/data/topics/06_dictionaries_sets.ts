@@ -72,7 +72,7 @@ result = ___1___`,
         { id: '1', label: 'Blank [1] (Dict comprehension)', placeholder: 'e.g. {k: v[0] for k, v in info.items()}' }
       ],
       answers: {
-        '1': '{k:v[0] for k,v in info.items()}'
+        '1': '{k: v[0] for k, v in info.items()}'
       },
       explanation: 'Iterating `info.items()` yields `(k, v)` where `k` is the course code and `v` is a tuple like `("Comp prog", 3)`. Accessing `v[0]` extracts the course name string.'
     },
@@ -137,6 +137,74 @@ ___1___ regist[2301170]`,
         '1': 'del'
       },
       explanation: 'The `del` statement in Python deletes references, list elements, or dictionary key-value pairs (e.g. `del regist[2301170]`).'
+    },
+    {
+      id: 'dict_07',
+      topicId: '06_dictionaries_sets',
+      topicTitle: 'Dictionaries, Sets & Tuples',
+      scope: 'final',
+      title: 'get() with a Default versus Square Brackets',
+      type: 'mcq',
+      difficulty: 'medium',
+      description: 'What does this script print?',
+      codeSnippet: `stock = {'pen': 3}
+print(stock.get('pen', 0) + stock.get('book', 0))`,
+      options: [
+        { id: 'A', text: '3', isCodeFont: true },
+        { id: 'B', text: '0', isCodeFont: true },
+        { id: 'C', text: "KeyError: 'book'", isCodeFont: false },
+        { id: 'D', text: 'TypeError: unsupported operand type(s) for +', isCodeFont: false },
+        { id: 'E', text: 'None', isCodeFont: true }
+      ],
+      correctOptionId: 'A',
+      explanation: "`.get(key, default)` returns the default instead of raising when the key is absent. `'pen'` is present so the first call gives `3`; `'book'` is missing so the second gives the supplied default `0`. The sum is `3`.\nWriting `stock['book']` instead would raise `KeyError` (answer C), and `.get('book')` **without** a default would return `None`, making the addition fail with a `TypeError` (answer D)."
+    },
+    {
+      id: 'dict_08',
+      topicId: '06_dictionaries_sets',
+      topicTitle: 'Dictionaries, Sets & Tuples',
+      scope: 'final',
+      title: 'Set Union, Intersection & Difference',
+      type: 'tracing',
+      difficulty: 'medium',
+      description: 'Give the values of `u`, `i` and `d` **after line 5 has executed**. Write sets the way Python displays them, e.g. `{1, 2}`.',
+      codeSnippet: `1: a = {1, 2, 3}
+2: b = {3, 4}
+3: u = a | b
+4: i = a & b
+*5: d = a - b`,
+      variablesToTrack: ['u', 'i', 'd'],
+      targets: [
+        { line: 5, vars: ['u', 'i', 'd'] }
+      ],
+      answers: {
+        '5-u': '{1, 2, 3, 4}',
+        '5-i': '{3}',
+        '5-d': '{1, 2}'
+      },
+      explanation: '`|` is **union** — every element in either set, with duplicates collapsed, so the shared `3` appears once.\n`&` is **intersection** — only elements in both, which is just `{3}`.\n`-` is **difference** — elements of `a` that are not in `b`, so `3` is removed and `{1, 2}` remains. Note that `b - a` would instead give `{4}`; difference is not symmetric.'
+    },
+    {
+      id: 'dict_09',
+      topicId: '06_dictionaries_sets',
+      topicTitle: 'Dictionaries, Sets & Tuples',
+      scope: 'final',
+      title: 'Counting Characters with a Dictionary',
+      type: 'completion',
+      difficulty: 'medium',
+      description: "Fill in blank [1] so the program counts each character and prints `{'b': 1, 'a': 3, 'n': 2}`.",
+      codeSnippet: `text = 'banana'
+counts = {}
+for ch in text:
+    counts[ch] = ___1___
+print(counts)`,
+      blanks: [
+        { id: '1', label: 'Blank [1] (expression)', placeholder: 'e.g. counts.get(ch, 0) + 1', hint: 'The first time a character appears it has no entry yet' }
+      ],
+      answers: {
+        '1': 'counts.get(ch, 0) + 1'
+      },
+      explanation: "`counts` starts empty, so the first time a character is seen there is no entry to read. `counts[ch] + 1` would raise `KeyError` on that first occurrence.\n`counts.get(ch, 0)` returns the running count if present and `0` if not, so `+ 1` works on both the first and later occurrences.\nThe printed order is insertion order — `b`, `a`, `n` — because Python 3.7+ dictionaries preserve it."
     }
   ]
 };

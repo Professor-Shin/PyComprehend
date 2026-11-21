@@ -47,9 +47,9 @@ print(x)`,
       answers: {
         '3-str1': "'Jennie'",
         '3-str2': "'Solooooo'",
-        '3-str3': "'JennieoolS'"
+        '3-str3': "'Jennieoooo'"
       },
-      explanation: "`str2` is `'Solooooo'` (length 8). `str2[::-2]` starts from end (index 7: `'o'`), stepping backward by 2: index 7 `'o'`, index 5 `'o'`, index 3 `'l'`, index 1 `'S'`, producing `'oolS'`. Concatenating with `'Jennie'` yields `'JennieoolS'`."
+      explanation: "`str2` is `'Solooooo'`, whose 8 characters are `S o l o o o o o` at indices 0-7.\n`str2[::-2]` starts at the last index and steps backward by 2, visiting indices 7, 5, 3 and 1 — which hold `'o'`, `'o'`, `'o'` and `'o'`. The `'l'` sits at index 2 and the `'S'` at index 0, so neither is visited.\nThat gives `'oooo'`, and concatenating with `'Jennie'` yields `'Jennieoooo'`."
     },
     {
       id: 'list_03',
@@ -142,6 +142,73 @@ a_names = [i for i in names if ___1___]`,
         '7-square': '[[0, 1], [1, 2]]'
       },
       explanation: '`i=0`: `inner` gets `0+0=0, 0+1=1` -> `[0, 1]`.\n`i=1`: `inner` gets `1+0=1, 1+1=2` -> `[1, 2]`.\n`square` becomes `[[0, 1], [1, 2]]`.'
+    },
+    {
+      id: 'list_07',
+      topicId: '05_lists_strings',
+      topicTitle: 'Lists, Strings & Comprehensions',
+      scope: 'final',
+      title: 'Aliasing versus Slicing a Copy',
+      type: 'tracing',
+      difficulty: 'hard',
+      description: 'Give the values of `a`, `b` and `c` **after line 5 has executed**.',
+      codeSnippet: `1: a = [1, 2, 3]
+2: b = a
+3: c = a[:]
+4: b.append(4)
+*5: c.append(9)`,
+      variablesToTrack: ['a', 'b', 'c'],
+      targets: [
+        { line: 5, vars: ['a', 'b', 'c'] }
+      ],
+      answers: {
+        '5-a': '[1, 2, 3, 4]',
+        '5-b': '[1, 2, 3, 4]',
+        '5-c': '[1, 2, 3, 9]'
+      },
+      explanation: 'Line 2 does **not** copy: `b` becomes a second name for the same list as `a`. Line 3 **does** copy — `a[:]` builds a new list with the same contents.\nSo appending `4` through `b` on line 4 is visible through `a` as well, while appending `9` to `c` on line 5 touches only the copy. The copy was taken before line 4, which is why `c` has no `4` in it.'
+    },
+    {
+      id: 'list_08',
+      topicId: '05_lists_strings',
+      topicTitle: 'Lists, Strings & Comprehensions',
+      scope: 'final',
+      title: 'What .sort() Returns',
+      type: 'mcq',
+      difficulty: 'medium',
+      description: 'What does this script print?',
+      codeSnippet: `nums = [3, 1, 2]
+result = nums.sort()
+print(result, nums)`,
+      options: [
+        { id: 'A', text: '[1, 2, 3] [1, 2, 3]', isCodeFont: true },
+        { id: 'B', text: 'None [1, 2, 3]', isCodeFont: true },
+        { id: 'C', text: 'None [3, 1, 2]', isCodeFont: true },
+        { id: 'D', text: '[1, 2, 3] [3, 1, 2]', isCodeFont: true },
+        { id: 'E', text: 'AttributeError: list object has no attribute sort', isCodeFont: false }
+      ],
+      correctOptionId: 'B',
+      explanation: '`.sort()` sorts the list **in place** and returns `None`. So `nums` really is reordered to `[1, 2, 3]`, but `result` captures the `None` it returned.\nTo get a sorted list as a value, use `sorted(nums)`, which leaves the original untouched and returns a new list — that would give answer D.'
+    },
+    {
+      id: 'list_09',
+      topicId: '05_lists_strings',
+      topicTitle: 'Lists, Strings & Comprehensions',
+      scope: 'final',
+      title: 'Joining a List into One String',
+      type: 'completion',
+      difficulty: 'medium',
+      description: 'Fill in blank [1] so the program prints `py-com-prehend`.',
+      codeSnippet: `words = ['py', 'com', 'prehend']
+joined = ___1___
+print(joined)`,
+      blanks: [
+        { id: '1', label: 'Blank [1] (expression)', placeholder: "e.g. '-'.join(words)", hint: 'join is a method on the separator string, not on the list' }
+      ],
+      answers: {
+        '1': "'-'.join(words)"
+      },
+      explanation: "`join` is called on the **separator**, with the list as the argument: `'-'.join(words)`. It inserts the separator *between* items, so three words produce two dashes, not three.\nThe reversed form `words.join('-')` is a common mistake and raises `AttributeError`, because lists have no `join` method."
     }
   ]
 };
